@@ -269,11 +269,12 @@ class LISAfile(base.TranslationStore):
     namespace = None
 
     def __init__(
-        self, inputfile=None, sourcelanguage="en", targetlanguage=None, **kwargs
+        self, inputfile=None, sourcelanguage="en", targetlanguage=None,
+        huge_tree=False, **kwargs
     ):
         super().__init__(**kwargs)
         if inputfile is not None:
-            self.parse(inputfile)
+            self.parse(inputfile, huge_tree)
             assert self.document.getroot().tag == self.namespaced(self.rootNode)
         else:
             # We strip out newlines to ensure that spaces in the skeleton
@@ -346,7 +347,7 @@ class LISAfile(base.TranslationStore):
         treestring = self.serialize_hook(treestring)
         out.write(treestring)
 
-    def parse(self, xml):
+    def parse(self, xml, huge_tree=False):
         """Populates this object from the given xml string"""
         if not hasattr(self, "filename"):
             self.filename = getattr(xml, "name", "")
@@ -354,7 +355,8 @@ class LISAfile(base.TranslationStore):
             xml.seek(0)
             posrc = xml.read()
             xml = posrc
-        parser = etree.XMLParser(strip_cdata=False, resolve_entities=False)
+        parser = etree.XMLParser(strip_cdata=False, resolve_entities=False,
+                                 huge_tree=huge_tree)
         self.document = etree.fromstring(xml, parser).getroottree()
         self.encoding = self.document.docinfo.encoding
         self.initbody()
